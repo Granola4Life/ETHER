@@ -1,214 +1,215 @@
-    gsap.registerPlugin(ScrollTrigger);
-    let speed = 100;
+let renderer,
+scene,
+camera,
+sphereBg,
+nucleus,
+stars,
+controls,
+container = document.getElementById("canvas_container"),
+timeout_Debounce,
+noise = new SimplexNoise(),
+cameraSpeed = 0,
+blobScale = 3;
 
-    /*  SCENE 1 */
-    let scene1 = gsap.timeline();
-    ScrollTrigger.create({
-        animation: scene1,
-        trigger: ".scrollElement",
-        start: "top top",
-        end: "45% 100%",
-        scrub: 3,
+
+init();
+animate();
+
+
+function init() {
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.01, 1000)
+    camera.position.set(0,0,230);
+
+    const directionalLight = new THREE.DirectionalLight("#fff", 2);
+    directionalLight.position.set(0, 50, -20);
+    scene.add(directionalLight);
+
+    let ambientLight = new THREE.AmbientLight("#ffffff", 1);
+    ambientLight.position.set(0, 20, 20);
+    scene.add(ambientLight);
+
+    renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true
     });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
 
-    // hills animation 
-    scene1.to("#h1-1", { y: 3 * speed, x: 1 * speed, scale: 0.9, ease: "power1.in" }, 0)
-    scene1.to("#h1-2", { y: 2.6 * speed, x: -0.6 * speed, ease: "power1.in" }, 0)
-    scene1.to("#h1-3", { y: 1.7 * speed, x: 1.2 * speed }, 0.03)
-    scene1.to("#h1-4", { y: 3 * speed, x: 1 * speed }, 0.03)
-    scene1.to("#h1-5", { y: 2 * speed, x: 1 * speed }, 0.03)
-    scene1.to("#h1-6", { y: 2.3 * speed, x: -2.5 * speed }, 0)
-    scene1.to("#h1-7", { y: 5 * speed, x: 1.6 * speed }, 0)
-    scene1.to("#h1-8", { y: 3.5 * speed, x: 0.2 * speed }, 0)
-    scene1.to("#h1-9", { y: 3.5 * speed, x: -0.2 * speed }, 0)
+    //OrbitControl
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 4;
+    controls.maxDistance = 350;
+    controls.minDistance = 150;
+    controls.enablePan = false;
 
-    //animate text
-    scene1.to("#info", { y: 8 * speed }, 0)
-
-
-
-    /*   Bird   */
-    gsap.fromTo("#bird", { opacity: 1 }, {
-        y: -250,
-        x: 800,
-        ease: "power2.out",
-        scrollTrigger: {
-            trigger: ".scrollElement",
-            start: "15% top",
-            end: "60% 100%",
-            scrub: 4,
-            onEnter: function() { gsap.to("#bird", { scaleX: 1, rotation: 0 }) },
-            onLeave: function() { gsap.to("#bird", { scaleX: -1, rotation: -15 }) },
-        }
-    })
+    const loader = new THREE.TextureLoader();
+    const textureSphereBg = loader.load('https://i.ibb.co/4gHcRZD/bg3-je3ddz.jpg');
+    const texturenucleus = loader.load('https://i.ibb.co/hcN2qXk/star-nc8wkw.jpg');
+    const textureStar = loader.load("https://i.ibb.co/ZKsdYSz/p1-g3zb2a.png");
+    const texture1 = loader.load("https://i.ibb.co/F8by6wW/p2-b3gnym.png");  
+    const texture2 = loader.load("https://i.ibb.co/yYS2yx5/p3-ttfn70.png");
+    const texture4 = loader.load("https://i.ibb.co/yWfKkHh/p4-avirap.png");
 
 
-    /* Clouds  */
-    let clouds = gsap.timeline();
-    ScrollTrigger.create({
-        animation: clouds,
-        trigger: ".scrollElement",
-        start: "top top",
-        end: "70% 100%",
-        scrub: 1,
+    /*  Nucleus  */   
+    texturenucleus.anisotropy = 16;
+    let icosahedronGeometry = new THREE.IcosahedronGeometry(30, 10);
+    let lambertMaterial = new THREE.MeshPhongMaterial({ map: texturenucleus });
+    nucleus = new THREE.Mesh(icosahedronGeometry, lambertMaterial);
+    scene.add(nucleus);
+
+
+    /*    Sphere  Background   */
+    textureSphereBg.anisotropy = 16;
+    let geometrySphereBg = new THREE.SphereBufferGeometry(150, 40, 40);
+    let materialSphereBg = new THREE.MeshBasicMaterial({
+        side: THREE.BackSide,
+        map: textureSphereBg,
     });
-
-    clouds.to("#cloud1", { x: 500 }, 0)
-    clouds.to("#cloud2", { x: 1000 }, 0)
-    clouds.to("#cloud3", { x: -1000 }, 0)
-    clouds.to("#cloud4", { x: -700, y: 25 }, 0)
+    sphereBg = new THREE.Mesh(geometrySphereBg, materialSphereBg);
+    scene.add(sphereBg);
 
 
+    /*    Moving Stars   */
+    let starsGeometry = new THREE.Geometry();
 
-    /* Sun motion Animation  */
-    let sun = gsap.timeline();
-    ScrollTrigger.create({
-        animation: sun,
-        trigger: ".scrollElement",
-        start: "top top",
-        end: "2200 100%",
-        scrub: 1,
-    });
+    for (let i = 0; i < 50; i++) {
+        let particleStar = randomPointSphere(150); 
 
-    //sun motion 
-    sun.to("#bg_grad", { attr: { cy: "330" } }, 0.00)
+        particleStar.velocity = THREE.MathUtils.randInt(50, 200);
 
-    //bg change
-    sun.to("#sun", { attr: { offset: "0.15" } }, 0.00)
-    sun.to("#bg_grad stop:nth-child(2)", { attr: { offset: "0.15" } }, 0.00)
-    sun.to("#bg_grad stop:nth-child(3)", { attr: { offset: "0.18" } }, 0.00)
-    sun.to("#bg_grad stop:nth-child(4)", { attr: { offset: "0.25" } }, 0.00)
-    sun.to("#bg_grad stop:nth-child(5)", { attr: { offset: "0.46" } }, 0.00)
-    sun.to("#bg_grad stop:nth-child(6)", { attr: { "stop-color": "#FF9171" } }, 0)
+        particleStar.startX = particleStar.x;
+        particleStar.startY = particleStar.y;
+        particleStar.startZ = particleStar.z;
 
-
-
-    /*   SCENE 2  */
-    let scene2 = gsap.timeline();
-    ScrollTrigger.create({
-        animation: scene2,
-        trigger: ".scrollElement",
-        start: "15% top",
-        end: "40% 100%",
-        scrub: 4,
-    });
-
-    scene2.fromTo("#h2-1", { y: 500, opacity: 0 }, { y: 0, opacity: 1 }, 0)
-    scene2.fromTo("#h2-2", { y: 500 }, { y: 0 }, 0.1)
-    scene2.fromTo("#h2-3", { y: 700 }, { y: 0 }, 0.1)
-    scene2.fromTo("#h2-4", { y: 700 }, { y: 0 }, 0.2)
-    scene2.fromTo("#h2-5", { y: 800 }, { y: 0 }, 0.3)
-    scene2.fromTo("#h2-6", { y: 900 }, { y: 0 }, 0.3)
-
-
-
-    /* Bats */
-    gsap.fromTo("#bats", { opacity: 1, y: 400, scale: 0 }, {
-        y: 120,
-        scale: 0.8,
-        transformOrigin: "50% 50%",
-        ease: "power3.out",
-        scrollTrigger: {
-            trigger: ".scrollElement",
-            start: "40% top",
-            end: "70% 100%",
-            scrub: 3,
-            onEnter: function() {
-                gsap.utils.toArray("#bats path").forEach((item, i) => {
-                    gsap.to(item, { scaleX: 0.5, yoyo: true, repeat: 11, duration: 0.15, delay: 0.7 + (i / 10), transformOrigin: "50% 50%" })
-                });
-                gsap.set("#bats", { opacity: 1 })
-            },
-            onLeave: function() { gsap.to("#bats", { opacity: 0, delay: 2 }) },
-        }
-    })
-
-
-    /* Sun increase */
-    let sun2 = gsap.timeline();
-    ScrollTrigger.create({
-        animation: sun2,
-        trigger: ".scrollElement",
-        start: "2200 top",
-        end: "5000 100%",
-        scrub: 1,
-    });
-
-    sun2.to("#sun", { attr: { offset: "0.6" } }, 0)
-    sun2.to("#bg_grad stop:nth-child(2)", { attr: { offset: "0.7" } }, 0)
-    sun2.to("#sun", { attr: { "stop-color": "#ffff00" } }, 0)
-    sun2.to("#lg4 stop:nth-child(1)", { attr: { "stop-color": "#623951" } }, 0)
-    sun2.to("#lg4 stop:nth-child(2)", { attr: { "stop-color": "#261F36" } }, 0)
-    sun2.to("#bg_grad stop:nth-child(6)", { attr: { "stop-color": "#45224A" } }, 0)
-
-
-
-    /* Transition (from Scene2 to Scene3) */
-    gsap.set("#scene3", { y: 580, visibility: "visible" })
-    let sceneTransition = gsap.timeline();
-    ScrollTrigger.create({
-        animation: sceneTransition,
-        trigger: ".scrollElement",
-        start: "70% top",
-        end: "bottom 100%",
-        scrub: 3,
-    });
-
-    sceneTransition.to("#h2-1", { y: -680, scale: 1.5, transformOrigin: "50% 50%" }, 0)
-    sceneTransition.to("#bg_grad", { attr: { cy: "-80" } }, 0.00)
-    sceneTransition.to("#bg2", { y: 0 }, 0)
-
-
-
-    /* Scene 3 */
-    let scene3 = gsap.timeline();
-    ScrollTrigger.create({
-        animation: scene3,
-        trigger: ".scrollElement",
-        start: "80% 50%",
-        end: "bottom 100%",
-        scrub: 3,
-    });
-
-    //Hills motion
-    scene3.fromTo("#h3-1", { y: 300 }, { y: -550 }, 0)
-    scene3.fromTo("#h3-2", { y: 800 }, { y: -550 }, 0.03)
-    scene3.fromTo("#h3-3", { y: 600 }, { y: -550 }, 0.06)
-    scene3.fromTo("#h3-4", { y: 800 }, { y: -550 }, 0.09)
-    scene3.fromTo("#h3-5", { y: 1000 }, { y: -550 }, 0.12)
-
-    //stars
-    scene3.fromTo("#stars", { opacity: 0 }, { opacity: 0.5, y: -500 }, 0)
-
-    // Scroll Back text
-    scene3.fromTo("#arrow2", { opacity: 0 }, { opacity: 0.7, y: -710 }, 0.25)
-    scene3.fromTo("#text2", { opacity: 0 }, { opacity: 0.7, y: -710 }, 0.3)
-
-    //gradient value change
-    scene3.to("#bg2-grad", { attr: { cy: 600 } }, 0)
-    scene3.to("#bg2-grad", { attr: { r: 500 } }, 0)
-
-
-    /*   falling star   */
-    gsap.to("#fstar", {
-        x: -700,
-        y: -250,
-        ease: "power4.out",
-        scrollTrigger: {
-            trigger: ".scrollElement",
-            start: "4000 top",
-            end: "6000 100%",
-            scrub: 5,
-            onEnter: function() { gsap.set("#fstar", { opacity: 1 }) },
-            onLeave: function() { gsap.set("#fstar", { opacity: 0 }) },
-        }
-    })
-
-
-    //reset scrollbar position after refresh
-    window.onbeforeunload = function() {
-        window.scrollTo(0, 0);
+        starsGeometry.vertices.push(particleStar);
     }
+    let starsMaterial = new THREE.PointsMaterial({
+        size: 5,
+        color: "#ffffff",
+        transparent: true,
+        opacity: 0.8,
+        map: textureStar,
+        blending: THREE.AdditiveBlending,
+    });
+    starsMaterial.depthWrite = false;  
+    stars = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(stars);
 
+
+    /*    Fixed Stars   */
+    function createStars(texture, size, total) {
+        let pointGeometry = new THREE.Geometry();
+        let pointMaterial = new THREE.PointsMaterial({
+            size: size,
+            map: texture,
+            blending: THREE.AdditiveBlending,                      
+        });
+
+        for (let i = 0; i < total; i++) {
+            let radius = THREE.MathUtils.randInt(149, 70); 
+            let particles = randomPointSphere(radius);
+            pointGeometry.vertices.push(particles);
+        }
+        return new THREE.Points(pointGeometry, pointMaterial);
     }
+    scene.add(createStars(texture1, 15, 20));   
+    scene.add(createStars(texture2, 5, 5));
+    scene.add(createStars(texture4, 7, 5));
+
+
+    function randomPointSphere (radius) {
+        let theta = 2 * Math.PI * Math.random();
+        let phi = Math.acos(2 * Math.random() - 1);
+        let dx = 0 + (radius * Math.sin(phi) * Math.cos(theta));
+        let dy = 0 + (radius * Math.sin(phi) * Math.sin(theta));
+        let dz = 0 + (radius * Math.cos(phi));
+        return new THREE.Vector3(dx, dy, dz);
+    }
+}
+
+
+function animate() {
+
+    //Stars  Animation
+    stars.geometry.vertices.forEach(function (v) {
+        v.x += (0 - v.x) / v.velocity;
+        v.y += (0 - v.y) / v.velocity;
+        v.z += (0 - v.z) / v.velocity;
+
+        v.velocity -= 0.3;
+
+        if (v.x <= 5 && v.x >= -5 && v.z <= 5 && v.z >= -5) {
+            v.x = v.startX;
+            v.y = v.startY;
+            v.z = v.startZ;
+            v.velocity = THREE.MathUtils.randInt(50, 300);
+        }
+    });
+
+
+    //Nucleus Animation
+    nucleus.geometry.vertices.forEach(function (v) {
+        let time = Date.now();
+        v.normalize();
+        let distance = nucleus.geometry.parameters.radius + noise.noise3D(
+            v.x + time * 0.0005,
+            v.y + time * 0.0003,
+            v.z + time * 0.0008
+        ) * blobScale;
+        v.multiplyScalar(distance);
+    })
+    nucleus.geometry.verticesNeedUpdate = true;
+    nucleus.geometry.normalsNeedUpdate = true;
+    nucleus.geometry.computeVertexNormals();
+    nucleus.geometry.computeFaceNormals();
+    nucleus.rotation.y += 0.002;
+
+
+    //Sphere Beckground Animation
+    sphereBg.rotation.x += 0.002;
+    sphereBg.rotation.y += 0.002;
+    sphereBg.rotation.z += 0.002;
+
+    
+    controls.update();
+    stars.geometry.verticesNeedUpdate = true;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+}
+
+
+
+/*     Resize     */
+window.addEventListener("resize", () => {
+    clearTimeout(timeout_Debounce);
+    timeout_Debounce = setTimeout(onWindowResize, 80);
 });
+function onWindowResize() {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+
+
+/*     Fullscreen btn     */
+// let fullscreen;
+// let fsEnter = document.getElementById('fullscr');
+// fsEnter.addEventListener('click', function (e) {
+//     e.preventDefault();
+//     if (!fullscreen) {
+//         fullscreen = true;
+//         document.documentElement.requestFullscreen();
+//         fsEnter.innerHTML = "Exit Fullscreen";
+//     }
+//     else {
+//         fullscreen = false;
+//         document.exitFullscreen();
+//         fsEnter.innerHTML = "Go Fullscreen";
+//     }
+// });
