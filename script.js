@@ -48,7 +48,7 @@ function init() {
 
     const loader = new THREE.TextureLoader();
     const textureSphereBg = loader.load('https://etherpro.co/images/appa pink sky.jpeg');
-    const texturenucleus = loader.load('https://etherpro.co/images/ma belle.jpeg');
+    const texturenucleus = loader.load('https://etherpro.co/images/appa.jpeg');
     const textureStar = loader.load("https://i.ibb.co/ZKsdYSz/p1-g3zb2a.png");
     const texture1 = loader.load("https://i.ibb.co/F8by6wW/p2-b3gnym.png");
     const texture2 = loader.load("https://i.ibb.co/yYS2yx5/p3-ttfn70.png");
