@@ -157,7 +157,7 @@ function animate() {
         let time = Date.now();
         v.normalize();
         let distance = nucleus.geometry.parameters.radius + noise.noise3D(
-            v.x + time * 0.0012,
+            v.x + time * 0.0020,
             v.y + time * 0.0005,
             v.z + time * 0.0008
         ) * blobScale;
