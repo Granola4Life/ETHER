@@ -50,7 +50,7 @@ function init() {
     const textureSphereBg = loader.load('https://etherpro.co/images/underground cave.jpeg');
     const texturenucleus = loader.load('https://etherpro.co/images/appa.jpeg');
     const textureStar = loader.load("https://i.ibb.co/ZKsdYSz/p1-g3zb2a.png");
-    const texture1 = loader.load("https://i.ibb.co/F8by6wW/p2-b3gnym.png");
+    const texture1 = loader.load("https://etherpro.co/images/appa pink sKy.jpeg");
     const texture2 = loader.load("https://i.ibb.co/yYS2yx5/p3-ttfn70.png");
     const texture4 = loader.load("https://i.ibb.co/yWfKkHh/p4-avirap.png");
 
@@ -157,8 +157,8 @@ function animate() {
         let time = Date.now();
         v.normalize();
         let distance = nucleus.geometry.parameters.radius + noise.noise3D(
-            v.x + time * 0.0020,
-            v.y + time * 0.0005,
+            v.x + time * 0.0005,
+            v.y + time * 0.0020,
             v.z + time * 0.0008
         ) * blobScale;
         v.multiplyScalar(distance);
